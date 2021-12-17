@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { getApps } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -20,3 +21,4 @@ if (!getApps().length) app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const rtdb = getDatabase(app);
+export const firestore = getFirestore(app);

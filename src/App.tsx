@@ -1,32 +1,19 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { auth } from "./configs/firebase.config";
 import { AuthChatScreen } from "./pages/AuthChatScreen/AuthChatScreen";
 import { Login } from "./pages/Login/Login";
-import { setAuthUser } from "./redux/reducers/general";
 
 const App = () => {
-  const dispatch = useDispatch();
-  const authUser = useSelector((state: any) => state.generalState.authUser);
-
+  const [authorized, setAuthorized] = useState(false);
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user?.uid) {
-        dispatch(
-          setAuthUser({
-            photoURL: user?.photoURL,
-            email: user?.email,
-            uid: user?.uid,
-            displayName: user?.displayName,
-          })
-        );
-      } else {
-        dispatch(setAuthUser(null));
+        setAuthorized(true);
       }
     });
   }, []);
   return (
-    <div className="App">{!authUser ? <Login /> : <AuthChatScreen />}</div>
+    <div className="App">{!authorized ? <Login /> : <AuthChatScreen />}</div>
   );
 };
 
