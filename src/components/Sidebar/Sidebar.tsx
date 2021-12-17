@@ -13,11 +13,12 @@ import {
   setActiveChat,
   setMyRooms,
   setOnlineUsers,
+  setRoomStatus,
   updateRoomMessages,
 } from "../../redux/reducers/general";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { LogoutPanel } from "../LogoutPanel/LogoutPanel";
-import { ref, get, onValue } from "firebase/database";
+import { ref, get, onValue, set } from "firebase/database";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -59,6 +60,9 @@ export const Sidebar = () => {
   const dispatch = useDispatch();
 
   const myRooms = useSelector((state: any) => state.generalState.myRooms);
+  const activeChatId = useSelector(
+    (state: any) => state.generalState.activeChat
+  );
   const onlineUsers = useSelector(
     (state: any) => state.generalState.onlineUsers
   );
@@ -157,13 +161,23 @@ export const Sidebar = () => {
       const onlineUsers = ref(rtdb, "onlineUsers/");
       (async () => {
         const oUsers = await get(onlineUsers);
-
         const jData = oUsers!.toJSON();
         if (jData) dispatch(setOnlineUsers(jData));
       })();
       onValue(onlineUsers, (data) => {
         const jData = data!.toJSON();
         if (jData) dispatch(setOnlineUsers(jData));
+      });
+
+      const roomsStatus = ref(rtdb, "rooms/");
+      (async () => {
+        const sRooms = await get(roomsStatus);
+        const rData = sRooms!.toJSON();
+        if (rData) dispatch(setRoomStatus(rData));
+      })();
+      onValue(roomsStatus, (data) => {
+        const rData = data!.toJSON();
+        if (rData) dispatch(setRoomStatus(rData));
       });
     }
   }, [fetchRoom]);
@@ -172,18 +186,36 @@ export const Sidebar = () => {
     setPresentTab(newValue);
   };
 
+  const handleRoomStatus = async (id: string) => {
+    if (activeChatId) {
+      const roomRefPrev = ref(
+        rtdb,
+        `rooms/${activeChatId}/${auth.currentUser?.uid}/`
+      );
+      await set(roomRefPrev, +new Date());
+    }
+
+    const presentRoomRef = ref(
+      rtdb,
+      `onlineUsers/${auth.currentUser?.uid}/onRoom/`
+    );
+    return await set(presentRoomRef, id);
+  };
+
   const handleNewChat = async (toUid: string) => {
     const bool = Object.entries(myRooms).find((e: any) =>
       e[1].participants.includes(toUid)
     );
+
     if (bool) {
+      await handleRoomStatus(bool[0]);
       dispatch(setActiveChat(bool[0]));
     } else {
       const roomsRef = collection(firestore, "rooms");
       const { id } = await addDoc(roomsRef, {
         participants: [toUid, auth.currentUser?.uid],
       });
-
+      await handleRoomStatus(id);
       dispatch(setActiveChat(id));
     }
   };
@@ -207,7 +239,10 @@ export const Sidebar = () => {
           {Object.entries(myRooms).map((e: any) => {
             return (
               <button
-                onClick={() => dispatch(setActiveChat(e[0]))}
+                onClick={async () => {
+                  await handleRoomStatus(e[0]);
+                  dispatch(setActiveChat(e[0]));
+                }}
                 className={s.users}
                 key={e[0]}
               >
@@ -244,7 +279,7 @@ export const Sidebar = () => {
           {Object.entries(users).map((e: any) => {
             return (
               <button
-                onClick={() => handleNewChat(e[0])}
+                onClick={async () => await handleNewChat(e[0])}
                 className={s.users}
                 key={e[0]}
               >

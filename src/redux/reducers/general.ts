@@ -1,10 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { ref, set } from "firebase/database";
+import { auth, rtdb } from "../../configs/firebase.config";
 
 // initial state
 const initialState: any = {
   activeChat: null,
   myRooms: null,
   onlineUsers: {},
+  roomStatus: {},
 };
 
 export const generalSlice = createSlice({
@@ -13,6 +16,10 @@ export const generalSlice = createSlice({
   reducers: {
     setActiveChat: (state, action) => {
       state.activeChat = action.payload;
+    },
+
+    setRoomStatus: (state, action) => {
+      state.roomStatus = action.payload;
     },
 
     setMyRooms: (state, action) => {
@@ -29,5 +36,10 @@ export const generalSlice = createSlice({
   },
 });
 
-export const { setActiveChat, setMyRooms, updateRoomMessages, setOnlineUsers } =
-  generalSlice.actions;
+export const {
+  setActiveChat,
+  setMyRooms,
+  updateRoomMessages,
+  setOnlineUsers,
+  setRoomStatus,
+} = generalSlice.actions;

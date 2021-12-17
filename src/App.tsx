@@ -13,18 +13,18 @@ const App = () => {
         set(onlineRef, {
           active: true,
           lastSeen: +new Date(),
+          onRoom: null,
         });
         setAuthorized(true);
       }
     });
-  }, []);
 
-  useEffect(() => {
     window.onunload = function () {
       const onlineRef = ref(rtdb, "onlineUsers/" + auth.currentUser?.uid);
       set(onlineRef, {
         active: false,
         lastSeen: +new Date(),
+        onRoom: null,
       });
     };
   }, []);
