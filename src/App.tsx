@@ -1,5 +1,6 @@
+import { ref, set } from "firebase/database";
 import { useState, useEffect } from "react";
-import { auth } from "./configs/firebase.config";
+import { auth, rtdb } from "./configs/firebase.config";
 import { AuthChatScreen } from "./pages/AuthChatScreen/AuthChatScreen";
 import { Login } from "./pages/Login/Login";
 
@@ -8,10 +9,26 @@ const App = () => {
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user?.uid) {
+        const onlineRef = ref(rtdb, "onlineUsers/" + user.uid);
+        set(onlineRef, {
+          active: true,
+          lastSeen: +new Date(),
+        });
         setAuthorized(true);
       }
     });
   }, []);
+
+  useEffect(() => {
+    window.onunload = function () {
+      const onlineRef = ref(rtdb, "onlineUsers/" + auth.currentUser?.uid);
+      set(onlineRef, {
+        active: false,
+        lastSeen: +new Date(),
+      });
+    };
+  }, []);
+
   return (
     <div className="App">{!authorized ? <Login /> : <AuthChatScreen />}</div>
   );

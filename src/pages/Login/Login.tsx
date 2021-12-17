@@ -1,13 +1,23 @@
-import { auth } from "../../configs/firebase.config";
+import { auth, firestore } from "../../configs/firebase.config";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import s from "./login.module.scss";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const provider = new GoogleAuthProvider();
 
 export const Login = () => {
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      const { user } = await signInWithPopup(auth, provider);
+      const userRef = doc(firestore, `users/${user.uid}`);
+      if (!(await getDoc(userRef)).exists()) {
+        setDoc(userRef, {
+          displayName: user.displayName,
+          email: user.email,
+          photoUrl: user.photoURL,
+          uid: user.uid,
+        });
+      }
     } catch (error) {
       console.log(error);
     }

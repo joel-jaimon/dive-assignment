@@ -4,6 +4,7 @@ export const LogoutPanel = () => {
   const signOut = async () => {
     try {
       await auth.signOut();
+      window.location.reload();
     } catch (error) {}
   };
 
